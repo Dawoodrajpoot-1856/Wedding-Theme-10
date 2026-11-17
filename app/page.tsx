@@ -1,0 +1,1154 @@
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Navigation,
+  Volume2,
+  VolumeX,
+  Heart,
+  CheckCircle,
+  CalendarPlus,
+  Send,
+  Sparkles,
+  Eraser,
+} from "lucide-react";
+
+const CARD = {
+  groomName: "Ali",
+  groomParents: "Son of Mr. & Mrs. Ahmed",
+  brideName: "Ayesha",
+  brideParents: "Daughter of Mr. & Mrs. Hassan",
+
+  eventTitle: "Walima",
+  start: "2026-12-29T19:00:00+05:00",
+  venue: "Royal Palm Golf & Country Club",
+  address: "Bab-e-Azam Grand Marquee, Canal Bank Road, Lahore",
+  mapsLink: "https://maps.google.com",
+
+  whatsapp: "923001234567",
+  musicSrc: "/sajna.mp3",
+
+  secretMessage:
+    "Zindagi ke safar mein jab dil ko sacha humsafar mil jaye, toh har din ek jashan ban jata hai. Aap ki duaon aur shirkat se hamari is nayi zindagi ka aagaz aur bhi haseen ho jayega!",
+
+  program: [
+    { time: "06:30 PM", label: "Mehmanon ka istiqbal", icon: "🌸" },
+    { time: "07:00 PM", label: "Dulha dulhan ki aamad", icon: "✨" },
+    { time: "07:30 PM", label: "Dua aur dawat", icon: "🤲" },
+    { time: "09:30 PM", label: "Rukhsati", icon: "🏡" },
+  ],
+
+  colors: [
+    { name: "Royal Gold", hex: "#D4AF37" },
+    { name: "Crimson Velvet", hex: "#8B0000" },
+    { name: "Emerald Accent", hex: "#0F5257" },
+    { name: "Ivory Silk", hex: "#FFF8F0" },
+  ],
+};
+
+/* ============================ HELPERS ============================ */
+const PK = "Asia/Karachi";
+const fmtDate = (iso: string) =>
+  new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: PK,
+  }).format(new Date(iso));
+const fmtTime = (iso: string) =>
+  new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: PK,
+  }).format(new Date(iso));
+const dateParts = (iso: string) => {
+  const f = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: PK,
+  }).formatToParts(new Date(iso));
+  const g = (t: string) => f.find((p) => p.type === t)?.value ?? "";
+  return {
+    weekday: g("weekday"),
+    day: g("day"),
+    month: g("month"),
+    year: g("year"),
+  };
+};
+
+const gcalLink = () => {
+  const s = new Date(CARD.start);
+  const e = new Date(s.getTime() + 4 * 3600 * 1000);
+  const f = (d: Date) => d.toISOString().replace(/[-:]|\.\d{3}/g, "");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+    `${CARD.eventTitle} - ${CARD.groomName} & ${CARD.brideName}`,
+  )}&dates=${f(s)}/${f(e)}&location=${encodeURIComponent(`${CARD.venue}, ${CARD.address}`)}`;
+};
+
+/* ============================ ROYAL ARCHWAY & VELVET CURTAIN GATE ============================ */
+function RoyalArchwayGate({
+  open,
+  onClick,
+}: {
+  open: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className={"royal-gate-wrap" + (open ? " opened" : "")}
+      onClick={onClick}
+    >
+      <svg
+        viewBox="0 0 400 480"
+        className="gate-svg"
+        role="img"
+        aria-label="Royal Archway Gate"
+      >
+        <defs>
+          <linearGradient id="stoneArch" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#E0D7CE" />
+            <stop offset="50%" stopColor="#B8ACA0" />
+            <stop offset="100%" stopColor="#8C7E72" />
+          </linearGradient>
+
+          <linearGradient id="woodTexture" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4A2511" />
+            <stop offset="50%" stopColor="#633418" />
+            <stop offset="100%" stopColor="#3B1C0B" />
+          </linearGradient>
+
+          <linearGradient id="velvetRed" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#A81C1C" />
+            <stop offset="40%" stopColor="#7A0A0A" />
+            <stop offset="100%" stopColor="#4A0202" />
+          </linearGradient>
+
+          <linearGradient id="goldGleam" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFE89C" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#AA820A" />
+          </linearGradient>
+
+          <radialGradient id="chandelierLight" cx="50%" cy="20%" r="50%">
+            <stop offset="0%" stopColor="#FFF8E0" stopOpacity="1" />
+            <stop offset="60%" stopColor="#FFD56B" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#FFD56B" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Interior Chandelier Light Background */}
+        <rect x="50" y="50" width="300" height="400" fill="#2A1B18" />
+        <circle
+          cx="200"
+          cy="110"
+          r="90"
+          fill="url(#chandelierLight)"
+          className="chandelier-pulse"
+        />
+
+        {/* Interior Chandelier */}
+        <g transform="translate(200, 60)" className="chandelier-g">
+          <line
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="30"
+            stroke="url(#goldGleam)"
+            strokeWidth="2"
+          />
+          <path
+            d="M-25 30 Q0 55 25 30"
+            fill="none"
+            stroke="url(#goldGleam)"
+            strokeWidth="2.5"
+          />
+          <circle cx="-25" cy="25" r="3" fill="#FFF" />
+          <circle cx="0" cy="40" r="4" fill="#FFF" />
+          <circle cx="25" cy="25" r="3" fill="#FFF" />
+        </g>
+
+        {/* Wooden Double Doors */}
+        <g className={"door-panel left-door" + (open ? " open-left" : "")}>
+          <rect
+            x="70"
+            y="160"
+            width="130"
+            height="290"
+            fill="url(#woodTexture)"
+            stroke="#231006"
+            strokeWidth="2"
+          />
+          {/* Wooden Panels Details */}
+          <rect
+            x="85"
+            y="180"
+            width="100"
+            height="110"
+            rx="8"
+            fill="none"
+            stroke="url(#goldGleam)"
+            strokeWidth="1.5"
+            opacity="0.6"
+          />
+          <rect
+            x="85"
+            y="310"
+            width="100"
+            height="120"
+            rx="8"
+            fill="none"
+            stroke="url(#goldGleam)"
+            strokeWidth="1.5"
+            opacity="0.6"
+          />
+          <circle cx="185" cy="295" r="6" fill="url(#goldGleam)" />
+        </g>
+
+        <g className={"door-panel right-door" + (open ? " open-right" : "")}>
+          <rect
+            x="200"
+            y="160"
+            width="130"
+            height="290"
+            fill="url(#woodTexture)"
+            stroke="#231006"
+            strokeWidth="2"
+          />
+          {/* Wooden Panels Details */}
+          <rect
+            x="215"
+            y="180"
+            width="100"
+            height="110"
+            rx="8"
+            fill="none"
+            stroke="url(#goldGleam)"
+            strokeWidth="1.5"
+            opacity="0.6"
+          />
+          <rect
+            x="215"
+            y="310"
+            width="100"
+            height="120"
+            rx="8"
+            fill="none"
+            stroke="url(#goldGleam)"
+            strokeWidth="1.5"
+            opacity="0.6"
+          />
+          <circle cx="215" cy="295" r="6" fill="url(#goldGleam)" />
+        </g>
+
+        {/* Glass Window Grid Above Door */}
+        <path
+          d="M70 160 C70 90 130 50 200 50 C270 50 330 90 330 160 Z"
+          fill="none"
+          stroke="url(#goldGleam)"
+          strokeWidth="3"
+        />
+        <line
+          x1="200"
+          y1="50"
+          x2="200"
+          y2="160"
+          stroke="url(#goldGleam)"
+          strokeWidth="1.5"
+        />
+        <line
+          x1="135"
+          y1="80"
+          x2="265"
+          y2="80"
+          stroke="url(#goldGleam)"
+          strokeWidth="1.5"
+        />
+        <line
+          x1="90"
+          y1="120"
+          x2="310"
+          y2="120"
+          stroke="url(#goldGleam)"
+          strokeWidth="1.5"
+        />
+
+        {/* Red Velvet Draped Curtains */}
+        <path d="M40 40 Q110 120 70 450 L40 450 Z" fill="url(#velvetRed)" />
+        <path d="M360 40 Q290 120 330 450 L360 450 Z" fill="url(#velvetRed)" />
+        <path
+          d="M40 40 Q200 110 360 40 Q200 70 40 40 Z"
+          fill="url(#velvetRed)"
+        />
+
+        {/* Curtain Gold Tassels */}
+        <g transform="translate(95, 270)">
+          <path d="M-10 0 L10 0 L5 25 L-5 25 Z" fill="url(#goldGleam)" />
+          <line
+            x1="0"
+            y1="25"
+            x2="0"
+            y2="45"
+            stroke="url(#goldGleam)"
+            strokeWidth="3"
+          />
+        </g>
+        <g transform="translate(305, 270)">
+          <path d="M-10 0 L10 0 L5 25 L-5 25 Z" fill="url(#goldGleam)" />
+          <line
+            x1="0"
+            y1="25"
+            x2="0"
+            y2="45"
+            stroke="url(#goldGleam)"
+            strokeWidth="3"
+          />
+        </g>
+
+        {/* Grand Stone Arch Outer Frame */}
+        <path
+          d="M40 460 V160 C40 70 110 20 200 20 C290 20 360 70 360 160 V460 H390 V150 C390 50 300 0 200 0 C100 0 10 50 10 150 V460 Z"
+          fill="url(#stoneArch)"
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* ============================ SCRATCH CARD COMPONENT ============================ */
+function ScratchCard({ text }: { text: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [scratched, setScratched] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Draw Gold Overlay
+    ctx.fillStyle = "#D4AF37";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Pattern texture on scratch card
+    ctx.fillStyle = "#B8901C";
+    for (let i = 0; i < canvas.width; i += 20) {
+      for (let j = 0; j < canvas.height; j += 20) {
+        ctx.beginPath();
+        ctx.arc(i + 10, j + 10, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.font = "bold 16px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#4A2511";
+    ctx.textAlign = "center";
+    ctx.fillText(
+      "✨ Scratch to Reveal Message ✨",
+      canvas.width / 2,
+      canvas.height / 2 + 5,
+    );
+  }, []);
+
+  const handleScratch = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    setScratched(true);
+  };
+
+  return (
+    <div className="scratch-container">
+      <div className="scratch-secret-text">
+        <Sparkles size={20} className="gold-icon" />
+        <p>{text}</p>
+      </div>
+      <canvas
+        ref={canvasRef}
+        width={320}
+        height={140}
+        className="scratch-canvas"
+        onMouseMove={(e) => e.buttons === 1 && handleScratch(e)}
+        onTouchMove={handleScratch}
+        onClick={handleScratch}
+      />
+      {!scratched && (
+        <small className="scratch-hint">
+          <Eraser size={14} /> Screen par finger/mouse chala kar scratch karein
+        </small>
+      )}
+    </div>
+  );
+}
+
+/* ============================ CONFETTI ============================ */
+type Piece = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  vr: number;
+  s: number;
+  c: string;
+  heart: boolean;
+};
+
+function Confetti({ trigger }: { trigger: number }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  const pieces = useRef<Piece[]>([]);
+
+  const pop = useCallback(() => {
+    const cv = ref.current;
+    if (!cv) return;
+    const colors = ["#D4AF37", "#8B0000", "#FFE89C", "#FFF8F0", "#AA820A"];
+    for (let i = 0; i < 110; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.5;
+      const sp = 7 + Math.random() * 9;
+      pieces.current.push({
+        x: cv.width / 2 + (Math.random() - 0.5) * 120,
+        y: cv.height * 0.8,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        r: Math.random() * 6,
+        vr: (Math.random() - 0.5) * 0.4,
+        s: 6 + Math.random() * 8,
+        c: colors[Math.floor(Math.random() * colors.length)],
+        heart: Math.random() < 0.25,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const cv = ref.current;
+    const ctx = cv?.getContext("2d");
+    if (!cv || !ctx) return;
+    const resize = () => {
+      cv.width = window.innerWidth;
+      cv.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    let raf = 0;
+    const loop = () => {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      pieces.current = pieces.current.filter((p) => p.y < cv.height + 30);
+      for (const p of pieces.current) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.28;
+        p.vx *= 0.985;
+        p.r += p.vr;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.r);
+        ctx.fillStyle = p.c;
+        if (p.heart) {
+          ctx.font = `${p.s * 2}px serif`;
+          ctx.textAlign = "center";
+          ctx.fillText("♥", 0, 0);
+        } else {
+          ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+        }
+        ctx.restore();
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (trigger > 0) {
+      pop();
+      setTimeout(pop, 280);
+    }
+  }, [trigger, pop]);
+
+  return <canvas ref={ref} className="confetti" />;
+}
+
+/* ============================ REVEAL ANIMATION ============================ */
+function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      className="rv"
+      initial={{ opacity: 0, y: 46, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function Digit({ v }: { v: string }) {
+  return (
+    <span className="dg">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={v}
+          initial={{ y: -16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 16, opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          style={{ display: "inline-block" }}
+        >
+          {v}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
+/* ============================ MAIN COMPONENT ============================ */
+export default function LuxuryRoyalCard() {
+  const [stage, setStage] = useState<"intro" | "opening" | "content">("intro");
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [guest, setGuest] = useState("");
+  const [popKey, setPopKey] = useState(0);
+  const [ameen, setAmeen] = useState(0);
+  const [flip, setFlip] = useState(false);
+
+  // RSVP
+  const [name, setName] = useState("");
+  const [count, setCount] = useState("1");
+  const [attending, setAttending] = useState<"yes" | "no">("yes");
+  const [note, setNote] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { scrollYProgress, scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 600], [0, -50]);
+
+  useEffect(() => {
+    setMounted(true);
+    const to = new URLSearchParams(window.location.search).get("to");
+    if (to) {
+      setGuest(to);
+      setName(to);
+    }
+  }, []);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const target = Date.parse(CARD.start);
+  const done = now !== null && now >= target;
+  const diff = now === null ? 0 : Math.max(0, target - now);
+  const units: [string, number][] = [
+    ["Din", Math.floor(diff / 86400000)],
+    ["Ghante", Math.floor(diff / 3600000) % 24],
+    ["Minute", Math.floor(diff / 60000) % 60],
+    ["Second", Math.floor(diff / 1000) % 60],
+  ];
+  const dp = dateParts(CARD.start);
+
+  const enter = () => {
+    if (stage !== "intro") return;
+    setStage("opening");
+    setTimeout(() => setPopKey((k) => k + 1), 600);
+    audioRef.current
+      ?.play()
+      .then(() => setPlaying(true))
+      .catch(() => {});
+    setTimeout(() => {
+      setStage("content");
+      setPopKey((k) => k + 1);
+    }, 2400);
+  };
+
+  const toggleMusic = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) {
+      a.pause();
+      setPlaying(false);
+    } else {
+      a.play()
+        .then(() => setPlaying(true))
+        .catch(() => {});
+    }
+  };
+
+  const submitRSVP = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    const msg =
+      `Assalam o Alaikum! ${name.trim()} ` +
+      (attending === "yes"
+        ? `inshaAllah ${CARD.eventTitle} mein shamil hoon ga/gi (${count} mehman).`
+        : "afsos, shamil nahi ho sakoon ga/gi.") +
+      (note.trim() ? ` ${note.trim()}` : "");
+    setSent(true);
+    setPopKey((k) => k + 1);
+    window.open(
+      `https://wa.me/${CARD.whatsapp}?text=${encodeURIComponent(msg)}`,
+      "_blank",
+    );
+  };
+
+  return (
+    <div className="root">
+      <audio ref={audioRef} src={CARD.musicSrc} loop preload="auto" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Amiri:wght@700&display=swap"
+      />
+      <style>{CSS}</style>
+
+      {/* Royal Background */}
+      <div className="royal-bg" />
+
+      <Confetti trigger={popKey} />
+      {stage === "content" && (
+        <motion.div className="bar" style={{ scaleX: scrollYProgress }} />
+      )}
+      {stage === "content" && (
+        <button className="music" onClick={toggleMusic} aria-label="Music">
+          {playing ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button>
+      )}
+
+      {/* ================= INTRO ARCHWAY GATE ================= */}
+      <AnimatePresence>
+        {stage !== "content" && (
+          <motion.div
+            className="intro"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.9 }}
+          >
+            <motion.div
+              className="intro-top"
+              animate={
+                stage === "opening"
+                  ? { opacity: 0, y: -20 }
+                  : { opacity: 1, y: 0 }
+              }
+              transition={{ duration: 0.6 }}
+            >
+              <span className="mini-gold">Royal Invitation</span>
+              <span className="script names gold-heading">
+                {CARD.groomName} & {CARD.brideName}
+              </span>
+            </motion.div>
+
+            <motion.div
+              className="scene"
+              animate={
+                stage === "opening"
+                  ? { scale: 2.2, opacity: 0.9 }
+                  : { scale: 1 }
+              }
+              style={{ transformOrigin: "50% 60%" }}
+              transition={{
+                duration: 1.8,
+                ease: [0.65, 0, 0.35, 1],
+                delay: stage === "opening" ? 0.3 : 0,
+              }}
+            >
+              <RoyalArchwayGate open={stage === "opening"} onClick={enter} />
+            </motion.div>
+
+            <motion.p
+              className="hint-gold"
+              animate={
+                stage === "opening"
+                  ? { opacity: 0 }
+                  : { opacity: [0.7, 1, 0.7], y: [0, -4, 0] }
+              }
+              transition={
+                stage === "opening"
+                  ? { duration: 0.3 }
+                  : { duration: 2, repeat: Infinity }
+              }
+              onClick={enter}
+            >
+              ✨ Darwaza kholne ke liye tap karein ✨
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= CONTENT PAGE ================= */}
+      {stage === "content" && (
+        <main className="page">
+          <motion.div
+            style={{ y: heroY }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="hero-scene"
+          >
+            <RoyalArchwayGate open onClick={() => {}} />
+          </motion.div>
+
+          <motion.div
+            className="bismillah"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </motion.div>
+
+          {guest && (
+            <motion.p
+              className="dear"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              Pyare {guest} ✨
+            </motion.p>
+          )}
+
+          <motion.h1
+            className="script names big"
+            initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ delay: 0.7, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {CARD.groomName}
+          </motion.h1>
+          <motion.p
+            className="par"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+          >
+            {CARD.groomParents}
+          </motion.p>
+
+          <motion.div
+            className="amp"
+            initial={{ scale: 0, rotate: -40 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 1.3, type: "spring", stiffness: 160 }}
+          >
+            <Heart size={26} fill="#8B0000" stroke="none" className="beat" />
+          </motion.div>
+
+          <motion.h1
+            className="script names big"
+            initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ delay: 1.5, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {CARD.brideName}
+          </motion.h1>
+          <motion.p
+            className="par"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.9 }}
+          >
+            {CARD.brideParents}
+          </motion.p>
+
+          {/* SCRATCH TO REVEAL MESSAGE */}
+          <Reveal>
+            <section className="card msg">
+              <h2 className="title script">Khaas Paigham 💌</h2>
+              <ScratchCard text={CARD.secretMessage} />
+            </section>
+          </Reveal>
+
+          {/* SAVE THE DATE FLIP CARD */}
+          <Reveal>
+            <section className="sec">
+              <h2 className="title script">Save the Date</h2>
+              <div
+                className="flip"
+                onClick={() => setFlip((f) => !f)}
+                role="button"
+                aria-label="Card palatein"
+              >
+                <div className={"flip-in" + (flip ? " on" : "")}>
+                  <div className="face front">
+                    <span className="mini">{dp.month}</span>
+                    <strong>{dp.day}</strong>
+                    <span className="mini">{dp.year}</span>
+                    <small>Palatne ke liye tap karein</small>
+                  </div>
+                  <div className="face back">
+                    <span className="script">{dp.weekday}</span>
+                    <b>{fmtTime(CARD.start)}</b>
+                    <small>{CARD.eventTitle} ki shaam</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </Reveal>
+
+          {/* COUNTDOWN */}
+          <Reveal>
+            <section className="sec">
+              <h2 className="title script">
+                {done
+                  ? "Jashan shuru ho chuka 🎉"
+                  : `${CARD.eventTitle} mein baqi`}
+              </h2>
+              {!done && (
+                <div className="count">
+                  {units.map(([l, v]) => (
+                    <div key={l} className="cbox">
+                      <strong>
+                        {now === null
+                          ? "--"
+                          : String(v)
+                              .padStart(2, "0")
+                              .split("")
+                              .map((ch, i) => <Digit key={i} v={ch} />)}
+                      </strong>
+                      <span>{l}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </Reveal>
+
+          {/* VENUE DETAILS */}
+          <Reveal>
+            <section className="sec">
+              <h2 className="title script">Royal Venue</h2>
+              <div className="card venue">
+                <div className="row">
+                  <Calendar size={19} className="gold-icon" />{" "}
+                  <span>{fmtDate(CARD.start)}</span>
+                </div>
+                <div className="row">
+                  <Clock size={19} className="gold-icon" />{" "}
+                  <span>{fmtTime(CARD.start)}</span>
+                </div>
+                <div className="dash" />
+                <div className="row top">
+                  <MapPin size={19} className="gold-icon" />
+                  <span>
+                    <b>{CARD.venue}</b>
+                    <br />
+                    <small>{CARD.address}</small>
+                  </span>
+                </div>
+                <div className="btns">
+                  <a
+                    className="btn"
+                    href={CARD.mapsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Navigation size={15} /> Raasta dekhein
+                  </a>
+                  <a
+                    className="btn ghost"
+                    href={gcalLink()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <CalendarPlus size={15} /> Calendar mein add
+                  </a>
+                </div>
+              </div>
+            </section>
+          </Reveal>
+
+          {/* PROGRAM TIMELINE */}
+          <Reveal>
+            <section className="sec">
+              <h2 className="title script">Shaam ki Manzilein</h2>
+              <div className="tower">
+                {CARD.program.map((p, i) => (
+                  <motion.div
+                    key={p.time}
+                    className="floor royal-floor"
+                    initial={{ opacity: 0, y: -20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-30px" }}
+                    transition={{ duration: 0.5, delay: i * 0.12 }}
+                  >
+                    <span className="fl-ic">{p.icon}</span>
+                    <div className="fl-info">
+                      <b>{p.time}</b>
+                      <span>{p.label}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+
+          {/* DRESS CODE COLORS */}
+          <Reveal>
+            <section className="sec">
+              <h2 className="title script">Mehfil ke Rang 🎨</h2>
+              <p className="par">
+                Aap ka libaas in shahi rangon mein ho to mehfil aur bhi
+                khubsurat lagegi.
+              </p>
+              <div className="colors">
+                {CARD.colors.map((c) => (
+                  <div
+                    key={c.name}
+                    className="c-item"
+                    style={{ background: c.hex }}
+                  >
+                    <span>{c.name}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </Reveal>
+
+          {/* RSVP FORM */}
+          <Reveal>
+            <section className="card rsvp">
+              <h2 className="title script">Aamad ki Ittela (RSVP) 📝</h2>
+              {sent ? (
+                <div className="sent-box">
+                  <CheckCircle size={40} color="#D4AF37" />
+                  <p>
+                    Shukriya! Aap ka paigham WhatsApp par bhej diya gaya hai.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={submitRSVP} className="form">
+                  <input
+                    type="text"
+                    placeholder="Aap ka naam"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="input"
+                  />
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name="attending"
+                        checked={attending === "yes"}
+                        onChange={() => setAttending("yes")}
+                      />{" "}
+                      Zaroor aaunga/aaungi
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="attending"
+                        checked={attending === "no"}
+                        onChange={() => setAttending("no")}
+                      />{" "}
+                      Mazrat khwah hoon
+                    </label>
+                  </div>
+                  {attending === "yes" && (
+                    <select
+                      value={count}
+                      onChange={(e) => setCount(e.target.value)}
+                      className="input"
+                    >
+                      <option value="1">1 Mehman</option>
+                      <option value="2">2 Mehman</option>
+                      <option value="3">3 Mehman</option>
+                      <option value="4">4 Mehman</option>
+                    </select>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Koi khaas baat ya dua (optional)"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className="input"
+                  />
+                  <button type="submit" className="btn primary">
+                    WhatsApp par RSVP bhejein <Send size={15} />
+                  </button>
+                </form>
+              )}
+            </section>
+          </Reveal>
+
+          {/* AMEEN BUTTON */}
+          <Reveal>
+            <section className="sec center">
+              <h2 className="title script">Bismillah aur Dua 🤲</h2>
+              <button
+                className="btn amin-btn"
+                onClick={() => {
+                  setAmeen((a) => a + 1);
+                  setPopKey((k) => k + 1);
+                }}
+              >
+                <Heart size={18} fill="#8B0000" stroke="none" /> Ameen kahein (
+                {ameen})
+              </button>
+            </section>
+          </Reveal>
+
+          <footer className="footer">
+            <p className="script">
+              {CARD.groomName} & {CARD.brideName} ki taraf se intezaar rahega ✨
+            </p>
+          </footer>
+        </main>
+      )}
+    </div>
+  );
+}
+
+/* ============================ STYLES ============================ */
+const CSS = `
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1A0D0A; color: #FFF8F0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+.root { min-height: 100vh; position: relative; display: flex; flex-direction: column; align-items: center; }
+
+/* Royal Background Glow */
+.royal-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 20%, #3D120C 0%, #1A0D0A 70%, #0D0504 100%); z-index: -2; }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+
+/* Top Progress Bar & Music Toggle */
+.bar { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: #D4AF37; transform-origin: 0%; z-index: 100; }
+.music { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: #2A110B; border: 1.5px solid #D4AF37; color: #D4AF37; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 90; box-shadow: 0 4px 20px rgba(212,175,55,0.3); transition: transform 0.2s; }
+.music:hover { transform: scale(1.08); }
+
+/* Intro Screen */
+.intro { position: fixed; inset: 0; background: radial-gradient(circle at 50% 30%, #2E100A 0%, #120604 90%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; padding: 20px; text-align: center; }
+.intro-top { margin-bottom: 20px; }
+.mini-gold { font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 4px; color: #D4AF37; display: block; margin-bottom: 8px; text-transform: uppercase; }
+.script { font-family: 'Dancing Script', cursive; font-weight: 700; }
+.gold-heading { color: #FFE89C; text-shadow: 0 2px 15px rgba(212,175,55,0.4); }
+.names { font-size: 3.2rem; line-height: 1.1; }
+
+.royal-gate-wrap { width: 100%; max-width: 350px; cursor: pointer; filter: drop-shadow(0 15px 35px rgba(0,0,0,0.6)); }
+.gate-svg { width: 100%; height: auto; }
+.hint-gold { margin-top: 24px; font-size: 0.95rem; color: #D4AF37; background: rgba(42,17,11,0.8); padding: 10px 24px; border-radius: 30px; border: 1px solid rgba(212,175,55,0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.4); cursor: pointer; }
+
+/* Gate Animations */
+.chandelier-pulse { animation: pulseChandelier 2s ease-in-out infinite alternate; }
+@keyframes pulseChandelier { from { opacity: 0.6; transform: scale(0.95); } to { opacity: 1; transform: scale(1.05); } }
+
+.door-panel { transition: transform 1.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: left center; }
+.right-door { transform-origin: right center; }
+.royal-gate-wrap.opened .open-left { transform: rotateY(-110deg) translateX(-10px); }
+.royal-gate-wrap.opened .open-right { transform: rotateY(110deg) translateX(10px); }
+
+/* Main Content Page */
+.page { width: 100%; max-width: 580px; padding: 30px 20px 80px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hero-scene { width: 100%; max-width: 250px; margin-bottom: 20px; }
+.bismillah { font-family: 'Amiri', serif; font-size: 1.6rem; color: #D4AF37; margin-bottom: 12px; }
+.dear { font-size: 1.1rem; color: #E0C097; margin-bottom: 10px; font-weight: 600; }
+.big { font-size: 3.8rem; color: #FFE89C; text-shadow: 0 2px 10px rgba(212,175,55,0.2); margin: 4px 0; }
+.par { font-size: 0.95rem; color: #B8A099; letter-spacing: 0.5px; }
+.amp { margin: 10px 0; display: inline-flex; }
+.beat { animation: heartbeat 1.5s ease-in-out infinite; }
+@keyframes heartbeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } }
+
+/* Cards Styling */
+.sec { width: 100%; margin-top: 40px; }
+.card { width: 100%; background: rgba(35, 14, 10, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(212,175,55,0.3); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 40px; }
+.title { font-size: 2.4rem; color: #D4AF37; margin-bottom: 16px; }
+
+/* Scratch Card */
+.scratch-container { position: relative; width: 100%; max-width: 320px; height: 140px; margin: 10px auto; border-radius: 14px; overflow: hidden; border: 1px solid rgba(212,175,55,0.4); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+.scratch-secret-text { position: absolute; inset: 0; background: #FFF8F0; color: #4A2511; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.scratch-secret-text p { font-size: 0.9rem; line-height: 1.5; font-weight: 500; }
+.scratch-canvas { position: absolute; inset: 0; cursor: pointer; touch-action: none; z-index: 10; }
+.scratch-hint { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.75rem; color: #D4AF37; margin-top: 8px; }
+
+/* Flip Save The Date Card */
+.flip { width: 100%; max-width: 280px; height: 160px; margin: 0 auto; perspective: 1000px; cursor: pointer; }
+.flip-in { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.flip-in.on { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; background: #2A110B; border: 1.5px solid rgba(212,175,55,0.4); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; backface-visibility: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.4); padding: 16px; }
+.face.back { transform: rotateY(180deg); background: #3B160E; }
+.face .mini { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #D4AF37; }
+.face strong { font-size: 2.2rem; color: #FFE89C; line-height: 1; margin: 4px 0; }
+.face small { font-size: 0.75rem; color: #B8A099; margin-top: 6px; }
+.face b { font-size: 1.3rem; color: #D4AF37; }
+
+/* Countdown Timer */
+.count { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+.cbox { background: #2A110B; border: 1px solid rgba(212,175,55,0.3); border-radius: 14px; padding: 12px 14px; min-width: 65px; display: flex; flex-direction: column; align-items: center; }
+.cbox strong { font-size: 1.5rem; color: #FFE89C; font-family: monospace; }
+.cbox span { font-size: 0.75rem; color: #D4AF37; text-transform: uppercase; margin-top: 2px; }
+.dg { display: inline-flex; overflow: hidden; }
+
+/* Venue Info */
+.venue .row { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: #E0C097; text-align: left; margin-bottom: 12px; }
+.venue .top { align-items: flex-start; }
+.gold-icon { color: #D4AF37; flex-shrink: 0; margin-top: 2px; }
+.venue .dash { width: 100%; height: 1px; background: rgba(212,175,55,0.2); margin: 14px 0; }
+.btns { display: flex; gap: 10px; margin-top: 18px; }
+.btn { flex: 1; background: #D4AF37; color: #1A0D0A; padding: 12px 16px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; transition: background 0.2s, transform 0.2s; box-shadow: 0 4px 15px rgba(212,175,55,0.3); }
+.btn:hover { background: #F3C649; transform: translateY(-2px); }
+.btn.ghost { background: transparent; border: 1.5px solid #D4AF37; color: #D4AF37; box-shadow: none; }
+.btn.ghost:hover { background: rgba(212,175,55,0.1); }
+
+/* Program Timeline */
+.tower { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.floor { background: #2A110B; border: 1px solid rgba(212,175,55,0.3); border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; text-align: left; }
+.fl-ic { font-size: 1.6rem; }
+.fl-info b { display: block; font-size: 0.95rem; color: #D4AF37; }
+.fl-info span { font-size: 0.9rem; color: #E0C097; }
+
+/* Colors Palette */
+.colors { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+.c-item { height: 75px; border-radius: 14px; display: flex; align-items: flex-end; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); }
+.c-item span { background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #FFF8F0; }
+
+/* RSVP & Forms */
+.form { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; text-align: left; }
+.input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid rgba(212,175,55,0.4); background: #1A0D0A; font-family: inherit; font-size: 0.95rem; color: #FFF8F0; outline: none; transition: border-color 0.2s; }
+.input:focus { border-color: #D4AF37; }
+.radio-group { display: flex; gap: 20px; font-size: 0.9rem; color: #E0C097; margin: 4px 0; cursor: pointer; }
+.radio-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.sent-box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; text-align: center; }
+.sent-box p { font-size: 0.95rem; color: #E0C097; }
+
+/* Ameen Button & Footer */
+.center { display: flex; flex-direction: column; align-items: center; }
+.amin-btn { max-width: 220px; margin-top: 12px; }
+.footer { margin-top: 50px; padding: 20px 0; color: #D4AF37; font-size: 1.4rem; }
+`;
